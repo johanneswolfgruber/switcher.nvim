@@ -19,11 +19,15 @@ M.get_all_buffers = function()
 
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) and vim.fn.buflisted(bufnr) == 1 then
+      local name = utils.get_file_name(vim.api.nvim_buf_get_name(bufnr))
+      local modified = vim.api.nvim_get_option_value('modified', { buf = bufnr })
       table.insert(buffers, {
         bufnr = bufnr,
-        name = utils.get_file_name(vim.api.nvim_buf_get_name(bufnr)),
-        modified = vim.api.nvim_get_option_value('modified', { buf = bufnr }),
+        name = name,
+        display_name = bufnr .. ': ' .. name .. (modified and ' ●' or ''),
+        modified = modified,
         last_accessed = vim.fn.getbufinfo(bufnr)[1].lastused,
+        is_selected = false,
       })
     end
   end
@@ -35,12 +39,11 @@ M.get_all_buffers = function()
   return buffers
 end
 
-M.get_scratch_buf_content = function()
-  local buffers = M.get_all_buffers()
+M.get_scratch_buf_content = function(buffers)
   local lines = {}
 
   for _, buf in ipairs(buffers) do
-    table.insert(lines, buf.bufnr .. ': ' .. buf.name .. (buf.modified and ' ●' or ''))
+    table.insert(lines, buf.display_name)
   end
 
   return lines
